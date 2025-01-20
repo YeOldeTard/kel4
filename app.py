@@ -1,18 +1,15 @@
 from flask import Flask, request, jsonify, render_template
-from mysql import connector
+from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-db = connector.connect(
-    host  = "5ckpn.h.filess.io",
-    database  = "Kelompok4_factorfog",
-    port      = "3307",
-    user  = "Kelompok4_factorfog",
-    password  = "49f1dbc6ebd72d53ebd275db886ef42cfbb555f0"
-)
+app.config['MYSQL_HOST'] = '5ckpn.h.filess.io'
+app.config['MYSQL_USER'] = 'Kelompok4_factorfog'
+app.config['MYSQL_PASSWORD'] = '49f1dbc6ebd72d53ebd275db886ef42cfbb555f0'
+app.config['MYSQL_DB'] = 'Kelompok4_factorfog'
+app.config['MYSQL_PORT'] = 3307
 
-if db.is_connected():
-    print('Open connection successful')
+mysql = MySQL(app)
 
 @app.route('/')
 def index():
@@ -28,19 +25,19 @@ def submit_order():
     if not (name and contact and details):
         return jsonify({'status': 'error', 'message': 'Semua field harus diisi'}), 400
 
-    cur = db.cursor()
+    cur = mysql.connection.cursor()
     cur.execute(
         "INSERT INTO pesanan (name, contact, details) VALUES (%s, %s, %s)",
         (name, contact, details)
     )
-    db.commit()
+    mysql.connection.commit()
     cur.close()
 
     return jsonify({'status': 'success', 'message': 'Pesanan berhasil disimpan'})
 
 @app.route('/orders', methods=['GET'])
 def get_orders():
-    cur = db.cursor()
+    cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM pesanan")
     data = cur.fetchall()
     cur.close()
